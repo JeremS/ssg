@@ -1,0 +1,9 @@
+◊(require
+   '[fr.jeremyschoffen.ssg.prose.lib :as lib])
+
+
+Text to require.
+
+
+
+◊lib/insert-doc{require/rinsert.prose}

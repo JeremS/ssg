@@ -1,0 +1,12 @@
+◊(require
+   '[fr.jeremyschoffen.ssg.prose.lib :as lib])
+
+
+
+Some text.
+
+
+◊lib/insert-doc{insert.prose}
+
+
+◊lib/require-doc{require.prose}

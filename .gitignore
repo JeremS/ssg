@@ -1,0 +1,21 @@
+# Java stuff
+/target
+/classes
+/checkouts
+/build
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+
+# clojure stuff
+/.cpcache
+/.lein-*
+/.nrepl-history
+/.nrepl-port
+.nrepl.edn
+
+# Utilities
+/.lsp
+.clj-kondo/**
+!.clj-kondo/config.edn
