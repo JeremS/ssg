@@ -2,6 +2,7 @@
 
  :deps {io.github.jerems/clj-nio {:git/tag "v70", :git/sha "2a9e1b4512"}
         io.github.jerems/prose   {:git/tag "v78", :git/sha "6373376862"}
+        io.github.jerems/dolly {:git/tag "v29", :git/sha "cfefa49133"}
         org.clojars.quoll/asami  {:mvn/version "2.3.2"}
         com.hyperfiddle/rcf {:mvn/version "20220902-130636"}}
 

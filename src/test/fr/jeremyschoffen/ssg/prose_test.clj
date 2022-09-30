@@ -8,7 +8,9 @@
 
 (def root (fs/path "test-resources/prose/includes"))
 
-(def ev (p/make-evaluator {:root-dir root}))
+(def clojure-eval (p/make-evaluator {:root-dir root}))
+
+(def sci-eval (p/make-sci-evaluator {:root-dir root}))
 
 (def add-root (partial fs/path root))
 
@@ -30,14 +32,23 @@
 
 
 (deftest tracking-deps
-  (let [res (p/eval&record-deps {:eval ev
-                                 :root root
-                                 :path "main.prose"})]
-    (is (=  (:deps res) expected-deps))
-    (is (= (:classification res) expected-classification))))
+  (testing "In clojure env"
+    (let [res (p/eval&record-deps {:eval clojure-eval
+                                   :root root
+                                   :path "main.prose"})]
+      (is (=  (:deps res) expected-deps))
+      (is (= (:classification res) expected-classification))))
+
+  (testing "In sci env"
+    (let [res (p/eval&record-deps {:eval sci-eval
+                                   :root root
+                                   :path "main.prose"})]
+      (is (=  (:deps res) expected-deps))
+      (is (= (:classification res) expected-classification)))))
 
 
 
 (comment
+  (sci-eval "main.prose")
   (t/run-tests)
   *e)
