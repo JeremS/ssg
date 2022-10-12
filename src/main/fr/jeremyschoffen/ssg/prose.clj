@@ -2,39 +2,49 @@
   (:require
     [fr.jeremyschoffen.dolly.core :as dolly]
     [fr.jeremyschoffen.prose.alpha.document.common.evaluator :as e]
-    [fr.jeremyschoffen.prose.alpha.document.clojure :as doc]
     [fr.jeremyschoffen.prose.alpha.document.sci :as doc-sci]
-    [fr.jeremyschoffen.prose.alpha.eval.sci :as e-sci]
+    [fr.jeremyschoffen.prose.alpha.eval.common :as eval-common]
+    [fr.jeremyschoffen.prose.alpha.eval.sci :as eval-sci]
+    [fr.jeremyschoffen.prose.alpha.reader.core :as reader]
     [fr.jeremyschoffen.ssg.prose.utils :as u]
     [medley.core :as medley]
-    [sci.core :as sci]
 
     fr.jeremyschoffen.ssg.prose.lib
     fr.jeremyschoffen.ssg.prose.utils))
 
+
+(defn slurp-doc [path]
+  (let [root (-> (eval-common/get-env) ::root-dir)
+        path' (cond->> path
+                root (u/normalize-path root))]
+    (slurp path')))
+
+
+(def default-env
+  {:prose.alpha.document/slurp-doc slurp-doc
+   :prose.alpha.document/read-doc reader/read-from-string
+   :prose.alpha.document/eval-forms eval-common/eval-forms-in-temp-ns})
+
+
 ;; -----------------------------------------------------------------------------
 ;; Generic stuff
 ;; -----------------------------------------------------------------------------
-(def default-env
-  (assoc doc/default-env :slurp-doc slurp))
 
-
-(defn make-evaluator [env]
-  (let [{:keys [slurp-doc root-dir]
-         :as env} (merge default-env env)
-
-        normalize (u/make-path-normalizer root-dir)
-        slurp-doc (fn [path]
-                    (-> path
-                        normalize
-                        slurp-doc))]
-    (e/make (assoc env :slurp-doc slurp-doc))))
+(defn make-evaluator [& {:as env}]
+  (fn eval-doc
+    ([path]
+     (eval-doc path {}))
+    ([path opts]
+     (-> default-env
+         (assoc :prose.alpha.document/path path)
+         (merge  opts)
+         e/eval-doc))))
 
 
 (defn eval&record-deps [{:keys [eval root path]}]
   (let [recording* (u/make-empty-recording)
         res (u/record-in recording*
-                           (eval path))
+                           (eval path {::root-dir root}))
         recording @recording*]
     {:res res
      :deps (-> recording
@@ -50,6 +60,7 @@
 ;; -----------------------------------------------------------------------------
 (dolly/def-clone doc-sci/make-ns-bindings)
 
+
 (def default-sci-nss
   (medley/deep-merge doc-sci/sci-opt-doc-ns
                       {:namespaces (make-ns-bindings fr.jeremyschoffen.ssg.prose.lib
@@ -57,24 +68,17 @@
 
 (defn init-sci-ctxt [opts]
   (let [opts (medley/deep-merge default-sci-nss opts)]
-    (e-sci/init opts)))
-
-(comment
-  (-> (init-sci-ctxt {})
-      :env
-      deref
-      :namespaces
-      keys))
+    (eval-sci/init opts)))
 
 
-(defn make-sci-evaluator [{:keys [sci-opts] :as env}]
+(defn make-sci-evaluator [& {:keys [sci-opts] :as env}]
   (let [ctxt (init-sci-ctxt sci-opts)
         eval-forms (fn [forms]
-                     (let [ctxt (sci/fork ctxt)]
-                       (e-sci/eval-forms-in-temp-ns ctxt forms)))]
+                     (let [ctxt (eval-sci/fork-sci-ctxt ctxt)]
+                       (eval-sci/eval-forms ctxt forms)))]
     (-> env
         (dissoc :sci-opts)
-        (assoc :eval-forms eval-forms)
+        (assoc :prose.alpha.document/eval-forms eval-forms)
         make-evaluator)))
 
 

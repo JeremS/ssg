@@ -8,9 +8,9 @@
 
 (def root (fs/path "test-resources/prose/includes"))
 
-(def clojure-eval (p/make-evaluator {:root-dir root}))
+(def clojure-eval (p/make-evaluator))
 
-(def sci-eval (p/make-sci-evaluator {:root-dir root}))
+(def sci-eval (p/make-sci-evaluator))
 
 (def add-root (partial fs/path root))
 
@@ -49,6 +49,7 @@
 
 
 (comment
-  (sci-eval "main.prose")
+  (clojure-eval "main.prose" {::p/root-dir root})
+  (sci-eval "main.prose" {::p/root-dir root})
   (t/run-tests)
   *e)

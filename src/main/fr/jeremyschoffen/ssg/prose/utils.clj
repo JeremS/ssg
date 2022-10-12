@@ -27,11 +27,15 @@
   (remove-root p-long r) := p)
 
 
+(defn normalize-path [root path]
+  (->> path
+       (fs/path root)
+       fs/normalize))
+
+
 (defn make-path-normalizer [root]
   (fn [path]
-    (-> path
-        (add-root root)
-        fs/normalize)))
+    (normalize-path root path)))
 
 
 ;;-----------------------------------------------------------------------------
