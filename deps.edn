@@ -4,6 +4,7 @@
         io.github.jerems/prose   {:git/tag "v78", :git/sha "6373376862"}
         io.github.jerems/dolly {:git/tag "v29", :git/sha "cfefa49133"}
         org.clojars.quoll/asami  {:mvn/version "2.3.2"}
+        io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}
         com.hyperfiddle/rcf {:mvn/version "20220902-130636"}}
 
  :aliases
@@ -12,7 +13,8 @@
   :dev {:extra-paths ["src/dev"]
         :extra-deps {nrepl/nrepl {:mvn/version "0.9.0"}}}
 
-  :test {:extra-paths ["src/test"]}
+  :test {:extra-paths ["src/test"]
+         :extra-deps {com.lambdaisland/facai {:mvn/version "0.7.59-alpha"}}}
 
   :build {:extra-paths ["src/build" "src/docs"]
           :extra-deps {io.github.jerems/mbt2 {:git/tag "v5", :git/sha "f5b65fe8cc"}}}}}

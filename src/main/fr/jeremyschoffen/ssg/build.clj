@@ -1,18 +1,12 @@
-(ns fr.jeremyschoffen.ssg.assets
+(ns fr.jeremyschoffen.ssg.build
   (:require
     [asami.core :as db]
-    [fr.jeremyschoffen.dolly.core :as dolly]
-    [fr.jeremyschoffen.ssg.assets.file :as af]
-    [fr.jeremyschoffen.ssg.assets.dir :as ad]
-    [fr.jeremyschoffen.ssg.assets.prose-doc :as ap]
     [fr.jeremyschoffen.ssg.utils :as u]))
 
 
-(dolly/def-clone asset-file af/make)
+(defmulti build! (fn [conn spec] (:type spec)))
 
-(dolly/def-clone asset-dir ad/make)
 
-(dolly/def-clone prose-document ap/make)
 
 
 (defn get-all-productions-ids [db]
@@ -30,5 +24,14 @@
         db production-id))
 
 
+(defn generate-build [conn]
+  (let [db (db/db conn)
+        productions (get-all-productions-ids db)]
+    (map (partial u/entity db) productions)))
+
+
+
+(defn execute-build! [conn specs]
+  (mapv (partial build! conn) specs))
 
 

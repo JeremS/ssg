@@ -23,11 +23,3 @@
           :where [_ :production/src ?id]]
         (db/db conn)))
 
-
-(defn make-asset [p]
-  {:asset/path p})
-
-
-(defn make-production [p deps]
-  {:production/path p
-   :production/deps deps})
