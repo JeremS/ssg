@@ -4,6 +4,7 @@
     [fr.jeremyschoffen.ssg.utils :as u]))
 
 
+(defmulti build :type)
 (defmulti build! (fn [conn spec] (:type spec)))
 
 
@@ -14,6 +15,7 @@
           :where
           [?id :target _]]
          db))
+
 
 
 (defn deps-for-id [db production-id]
@@ -31,7 +33,14 @@
 
 
 
-(defn execute-build! [conn specs]
-  (mapv (partial build! conn) specs))
+(defn execute-build! [conn build-plan]
+  (mapv (partial build! conn) build-plan))
+
+
+
+(defn build-all! [conn]
+  (let [build-plan (generate-build conn)]
+    (execute-build! conn build-plan)))
+
 
 

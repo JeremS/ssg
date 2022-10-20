@@ -5,7 +5,7 @@
 
 
 (defn make [src-path dest-path & opts]
-  {:type :asset-dir
+  {:type ::asset-dir
    :src src-path
    :target dest-path
    :opts opts})
@@ -17,6 +17,10 @@
      :src-dirs [src]
      :target-dir target}
     opts))
+
+
+(defmethod build/build ::asset-dir [spec]
+  (build spec))
 
 
 (defmethod build/build! ::asset-dir [_ spec]

@@ -8,7 +8,7 @@
 
 
 (defn make [src-path dest-path eval-fn & opts]
-  {:type :prose-document
+  {:type ::prose-doc
    :src src-path
    :target dest-path
    :eval-fn eval-fn})
@@ -46,6 +46,7 @@
     []
     deps-map))
 
+
 (defn recording->tx [main-doc-path main-doc-id {:keys [deps classification]}]
   (let [path->id (make-tx-ids main-doc-path main-doc-id classification)]
     (into (recording->deps-entities-tx classification path->id)
@@ -64,9 +65,14 @@
      :tx (recording->tx target id res+rec)}))
 
 
+(defmethod build/build ::prose-doc [spec]
+  (build spec))
+
+
 (defmethod build/build! ::prose-doc [conn {:keys [content target compile-fn tx]}]
   (db/transact conn {:tx-data tx})
   (spit target (compile-fn content)))
+
 
 (comment
   (u/with-fresh-temp-ids
