@@ -53,7 +53,7 @@
           (recording->deps-tx deps  path->id))))
 
 
-(defn build [{:keys [src target eval-fn compile-fn]
+(defn build [{:keys [src target eval-fn]
               :db/keys [id]}]
   (let [{:keys [res deps classification] :as res+rec} (p/eval&record-deps {:eval eval-fn
                                                                            :root (fs/parent src)
@@ -61,8 +61,7 @@
     {:type ::prose-doc
      :content res
      :target target
-     :compile-fn compile-fn
-     :tx (recording->tx target id res+rec)}))
+     :tx (recording->tx src id res+rec)}))
 
 
 (defmethod build/build ::prose-doc [spec]
