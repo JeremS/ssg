@@ -1,16 +1,18 @@
 (ns fr.jeremyschoffen.ssg.assets.prose-doc
   (:require
     [asami.core :as db]
+    [clojure.tools.build.api :as tb]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
     [fr.jeremyschoffen.ssg.build :as build]
     [fr.jeremyschoffen.ssg.prose :as p]
     [fr.jeremyschoffen.ssg.utils :as u]))
 
 
+
 (defn make [src-path dest-path eval-fn & opts]
   {:type ::prose-doc
-   :src src-path
-   :target dest-path
+   :src (str src-path)
+   :target (str dest-path)
    :eval-fn eval-fn})
 
 
@@ -64,15 +66,18 @@
      :tx (recording->tx src id res+rec)}))
 
 
-(defmethod build/build ::prose-doc [spec]
+(defmethod build/entity->build-plan ::prose-doc [spec]
   (build spec))
 
 
-(defmethod build/build! ::prose-doc [conn {:keys [content target compile-fn tx]}]
-  (db/transact conn {:tx-data tx})
-  (spit target (compile-fn content)))
+(defmethod build/build! ::prose-doc [conn {:keys [content target  tx]}]
+  (tb/write-file {:path target :string content})
+  (tap> (deref (db/transact conn {:tx-data tx}))))
 
 
+
+
+tb/write-file
 (comment
   (u/with-fresh-temp-ids
     (build {:src "test-resources/prose/includes/main.prose"

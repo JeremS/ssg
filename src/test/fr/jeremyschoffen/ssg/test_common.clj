@@ -49,7 +49,7 @@
 ;; -----------------------------------------------------------------------------
 ;; Definition of assets
 ;; -----------------------------------------------------------------------------
-(defn make-test-asset-tx [name]
+(defn make-test-asset [name]
   (assets/asset-file
     (fs/path asset-dir name)
     (fs/path target-assets name)))
@@ -57,49 +57,28 @@
 
 (def evaluator (prose/make-sci-evaluator))
 
+(def test-asset-file1 (make-test-asset "asset1.txt"))
+(def test-asset-file2 (make-test-asset "asset2.txt"))
+(def test-asset-dir (assets/asset-dir example-dir target-example))
+(def test-prose-file (assets/prose-document
+                       (fs/path test-resources "prose" "includes" "main.prose")
+                       (fs/path target "document" "includes.html")
+                       (comp compiler/compile! evaluator)))
+
+
 (def assets
-  (u/with-fresh-temp-ids
-    (-> []
-        (into (map make-test-asset-tx)
-              ["asset1.txt" "asset2.txt"])
-        (conj (assets/asset-dir example-dir target-example))
-        (conj (assets/prose-document (fs/path test-resources "prose" "includes" "main.prose")
-                                     (fs/path target "document" "includes.html")
-                                     (comp compiler/compile! evaluator))))))
-
-
+  [test-asset-file1 test-asset-file2 test-asset-dir test-prose-file])
 
 
 (comment
-  (require '[portal.api :as portal] '[fr.jeremyschoffen.ssg.build :as build])
-  (add-tap #'portal/submit)
-  (tap> ::hello)
-  (portal/open)
-  (setup-db)
-  (tear-down-db)
-  (def res (db/transact (conn) {:tx-data assets}))
-  (deref res)
+  (def assets
+    (u/with-fresh-temp-ids
+      (-> []
+          (into (map make-test-asset)
+                ["asset1.txt" "asset2.txt"])
+          (conj (assets/asset-dir example-dir target-example))
+          (conj (assets/prose-document (fs/path test-resources "prose" "includes" "main.prose")
+                                       (fs/path target "document" "includes.html")
+                                       (comp compiler/compile! evaluator)))))))
 
-  (tap>
-    (let [db (db/db (conn))]
-      (->> db
-           assets/get-all-productions-ids
-           (into []
-                 (comp
-                   (map #(u/entity db %))
-                   (map build/build))))))
-
-  (map #(u/entity conn %) (assets/get-all-productions-ids (db/db conn)))
-
-  (-> conn
-      db/db
-      assets/get-all-productions-ids
-      (->> (map (fn [id]
-                  {id (assets/deps-for-id (db/db conn) id)}))))
-
-  (db/q '[:find ?id ?dep
-          :where
-          [?id :production/path]
-          [?id :production/deps ?dep]]
-        (db/db conn)))
 

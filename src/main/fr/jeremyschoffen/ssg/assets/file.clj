@@ -7,17 +7,20 @@
 
 (defn make [src-path dest-path]
   {:type ::asset-file
-   :src src-path
-   :target dest-path})
+   :src (str src-path)
+   :target (str dest-path)})
 
 
-(defmethod build/build ::asset-file [spec]
+(defmethod build/entity->build-plan ::asset-file [spec]
   spec)
 
 
 
 
-(defmethod build/build! ::asset-file [spec]
-  (tb/copy-file spec))
+(defmethod build/build! ::asset-file [_ spec]
+  (println "building a file")
+  (println spec)
+  (-> spec
+      tb/copy-file))
 
 

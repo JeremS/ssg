@@ -6,12 +6,12 @@
 
 (defn make [src-path dest-path & opts]
   {:type ::asset-dir
-   :src src-path
-   :target dest-path
+   :src (str src-path)
+   :target (str dest-path)
    :opts opts})
 
 
-(defn build [{:keys [src target opts]}]
+(defmethod build/entity->build-plan ::asset-dir [{:keys [src target opts]}]
   (merge
     {:type ::asset-dir
      :src-dirs [src]
@@ -19,11 +19,7 @@
     opts))
 
 
-(defmethod build/build ::asset-dir [spec]
-  (build spec))
-
 
 (defmethod build/build! ::asset-dir [_ spec]
   (tb/copy-dir spec))
-
 

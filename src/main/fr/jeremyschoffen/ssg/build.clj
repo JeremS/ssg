@@ -1,20 +1,15 @@
 (ns fr.jeremyschoffen.ssg.build
   (:require
     [asami.core :as db]
+    [fr.jeremyschoffen.ssg.assets :as assets]
     [fr.jeremyschoffen.ssg.utils :as u]))
 
 
-(defmulti build :type)
+(defmulti entity->build-plan :type)
 (defmulti build! (fn [conn spec] (:type spec)))
 
 
 
-
-(defn get-all-productions-ids [db]
-  (db/q '[:find [?id ...]
-          :where
-          [?id :target _]]
-         db))
 
 
 
@@ -26,10 +21,14 @@
         db production-id))
 
 
-(defn generate-build [conn]
+(defn generate-build-plan [conn]
   (let [db (db/db conn)
-        productions (get-all-productions-ids db)]
-    (map (partial u/entity db) productions)))
+        productions (assets/get-all-productions-ids db)]
+    (sequence
+      (comp
+        (map (partial u/entity db))
+        (map entity->build-plan))
+      (assets/get-all-productions-ids db))))
 
 
 
@@ -39,7 +38,7 @@
 
 
 (defn build-all! [conn]
-  (let [build-plan (generate-build conn)]
+  (let [build-plan (generate-build-plan conn)]
     (execute-build! conn build-plan)))
 
 
