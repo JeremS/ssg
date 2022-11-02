@@ -1,7 +1,6 @@
 (ns fr.jeremyschoffen.ssg.build
   (:require
     [asami.core :as db]
-    [fr.jeremyschoffen.ssg.assets :as assets]
     [fr.jeremyschoffen.ssg.utils :as u]))
 
 
@@ -9,8 +8,11 @@
 (defmulti build! (fn [conn spec] (:type spec)))
 
 
-
-
+(defn get-all-productions-ids [db]
+  (db/q '[:find [?id ...]
+          :where
+          [?id :target _]]
+         db))
 
 
 (defn deps-for-id [db production-id]
@@ -22,13 +24,12 @@
 
 
 (defn generate-build-plan [conn]
-  (let [db (db/db conn)
-        productions (assets/get-all-productions-ids db)]
+  (let [db (db/db conn)]
     (sequence
       (comp
         (map (partial u/entity db))
         (map entity->build-plan))
-      (assets/get-all-productions-ids db))))
+      (get-all-productions-ids db))))
 
 
 
