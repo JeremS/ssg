@@ -18,9 +18,5 @@
 
 
 (defmethod build/build! ::asset-file [_ spec]
-  (println "building a file")
-  (println spec)
-  (-> spec
-      tb/copy-file))
-
+  (tb/copy-file spec))
 
