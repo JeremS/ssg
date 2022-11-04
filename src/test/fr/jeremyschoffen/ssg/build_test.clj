@@ -38,10 +38,19 @@
   (deref (db/transact (common/conn) {:tx-data [common/test-prose-file]}))
 
 
-  (db/get-all-productions-ids (common/conn))
+  (-> (common/conn)
+      (db/get-all-productions-ids)
+      first
+      (as-> id (db/entity (common/conn) id))
+      (-> :depends-on
+          (->> (map :db/ident))))
+          ;     (map (partial db/entity (common/conn))))))
 
-  (db/deps-for-id (common/conn) :a/node-38209)
-  (db/entity (common/conn) :a/node-38209 true)
+  (db/entity (common/conn)
+             (first
+               (db/get-all-productions-ids (common/conn))))
+
+
 
   (build/generate-build-plan (common/conn))
   (tap> ::hello)
@@ -59,8 +68,11 @@
               [?id :depends-on _]]
             db)))
 
-  (count  (db/q '[:find [?id ...]
-                  :where
-                  [?id :depends-on _]]
-               (db/db (common/conn)))))
+  (->> (db/q '[:find [?id ...]
+                   :where
+                   [?id :type :prose-dependency]]
+              (db/db (common/conn)))
+       (map (partial db/entity (common/conn)))
+       (map :path)
+       sort))
 
