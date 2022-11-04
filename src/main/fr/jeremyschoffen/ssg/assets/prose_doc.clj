@@ -11,10 +11,12 @@
 
 
 (defn make [src-path dest-path eval-fn & _]
-  {:type ::prose-doc
-   :src (str src-path)
-   :target (str dest-path)
-   :eval-fn eval-fn})
+  (let [s-src (str src-path)]
+    {:type ::prose-doc
+     :db/ident s-src
+     :src s-src
+     :target (str dest-path)
+     :eval-fn eval-fn}))
 
 
 (defn make-tx-ids [main-doc-path main-doc-id classification]
@@ -30,9 +32,10 @@
   (into []
         (map (fn [[path t]]
                {:db/id (path->id path)
+                :db/ident path
                 :type :prose-dependency
                 :prose-dependency-type t
-                :path (str path)}))
+                :path path}))
         classification))
 
 
@@ -45,9 +48,7 @@
 
 
 (defn recording->tx [main-doc-path main-doc-id {:keys [deps classification]}]
-  (let [path->id (make-tx-ids (fs/path main-doc-path)
-                              main-doc-id
-                              classification)]
+  (let [path->id (make-tx-ids main-doc-path main-doc-id classification)]
     (into (recording->deps-entities-tx classification path->id)
           (recording->deps-tx deps  path->id))))
 

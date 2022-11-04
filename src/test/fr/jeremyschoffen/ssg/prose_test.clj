@@ -13,22 +13,24 @@
 (def sci-eval (p/make-sci-evaluator))
 
 (def add-root (partial fs/path root))
+(def normalize-path (comp str add-root))
 
 (def expected-deps
-  {(add-root "main.prose") #{(add-root "require.prose") (add-root "insert.prose")}
-   (add-root "insert.prose")  #{(add-root "insert/iinsert2.prose")
-                                (add-root "insert/iinsert.prose")}
-   (add-root "require.prose") #{(add-root "require/rinsert.prose")}
-   (add-root "require/rinsert.prose") #{(add-root "require/rrequire.prose")}})
+  {(normalize-path "main.prose") #{(normalize-path "require.prose")
+                                   (normalize-path "insert.prose")}
+   (normalize-path "insert.prose")  #{(normalize-path "insert/iinsert2.prose")
+                                      (normalize-path "insert/iinsert.prose")}
+   (normalize-path "require.prose") #{(normalize-path "require/rinsert.prose")}
+   (normalize-path "require/rinsert.prose") #{(normalize-path "require/rrequire.prose")}})
 
 
 (def expected-classification
-  {(add-root "insert.prose") :insert
-   (add-root "insert/iinsert.prose") :insert
-   (add-root "insert/iinsert2.prose") :insert
-   (add-root "require.prose") :require
-   (add-root "require/rinsert.prose") :insert
-   (add-root "require/rrequire.prose") :require})
+  {(normalize-path "insert.prose") :insert
+   (normalize-path "insert/iinsert.prose") :insert
+   (normalize-path "insert/iinsert2.prose") :insert
+   (normalize-path "require.prose") :require
+   (normalize-path "require/rinsert.prose") :insert
+   (normalize-path "require/rrequire.prose") :require})
 
 
 (deftest tracking-deps

@@ -134,13 +134,14 @@
 
 
 (defn normalize-recording [recording root]
-  (let [normalize-path (make-path-normalizer root)]
+  (let [normalize-path (comp str (make-path-normalizer root))]
     (med/map-kv (fn [k v]
                   [(normalize-path k) (into #{} (map normalize-path) v)]) recording)))
 
 
 (defn classify-dep [{:keys [enter type]}]
   [enter type])
+
 
 (defn classify-deps [recording]
   (into {}
@@ -150,12 +151,13 @@
         recording))
 
 
-(defn normalize-classification [classification root]
-  (let [normalize-path (make-path-normalizer root)]
-    (update-keys classification normalize-path)))
-
 (tests
   (classify-deps [{:enter :a :type :insert}{:leave :a}{:enter :b :type :require}{:enter :c :type :require}{:leave :c}{:leave :b}])
   := {:a :insert :b :require :c :require})
+
+
+(defn normalize-classification [classification root]
+  (let [normalize-path (comp str (make-path-normalizer root))]
+    (update-keys classification normalize-path)))
 
 
