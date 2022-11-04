@@ -1,11 +1,10 @@
 (ns fr.jeremyschoffen.ssg.build-test
   (:require
-    [asami.core :as db]
     [clojure.test :as t :refer [deftest is testing use-fixtures]]
     [clojure.tools.build.api :as tb]
     [fr.jeremyschoffen.ssg.build :as build]
+    [fr.jeremyschoffen.ssg.db :as db]
     [fr.jeremyschoffen.ssg.test-common :as common]))
-
 
 
 (defn clean-test-target! []
@@ -36,23 +35,32 @@
   (clean-test-target!)
   (common/setup-db)
   (common/tear-down-db)
-  (deref (db/transact (common/conn) {:tx-data [common/assets]}))
+  (deref (db/transact (common/conn) {:tx-data [common/test-prose-file]}))
 
-  (require '[fr.jeremyschoffen.ssg.assets :as assets])
-  (assets/get-all-productions-ids (common/conn))
 
-  (assets/deps-for-id (common/conn) :a/node-38490)
-  (db/entity (common/conn) :a/node-38490 true)
+  (db/get-all-productions-ids (common/conn))
 
+  (db/deps-for-id (common/conn) :a/node-38209)
+  (db/entity (common/conn) :a/node-38209 true)
+
+  (build/generate-build-plan (common/conn))
   (tap> ::hello)
   (build/build-all! (common/conn))
+
   *e
 
 
-  (count(db/q '[:find ?id
-                :where
-                [?id :depends-on _]]
-             (common/conn))))
+  (let [conn (common/conn)
+        db (db/db conn)]
+    (map
+      #(db/entity db %)
+      (db/q '[:find [?id ...]
+              :where
+              [?id :depends-on _]]
+            db)))
 
-
+  (count  (db/q '[:find [?id ...]
+                  :where
+                  [?id :depends-on _]]
+               (db/db (common/conn)))))
 

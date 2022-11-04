@@ -1,12 +1,10 @@
 (ns fr.jeremyschoffen.ssg.test-common
   (:require
-    [asami.core :as db]
+    [fr.jeremyschoffen.ssg.db :as db]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
     [fr.jeremyschoffen.prose.alpha.out.html.compiler :as compiler]
     [fr.jeremyschoffen.ssg.assets :as assets]
-    [fr.jeremyschoffen.ssg.prose :as prose]
-    [fr.jeremyschoffen.ssg.utils :as u]))
-
+    [fr.jeremyschoffen.ssg.prose :as prose]))
 
 
 ;; -----------------------------------------------------------------------------
@@ -68,17 +66,4 @@
 
 (def assets
   [test-asset-file1 test-asset-file2 test-asset-dir test-prose-file])
-
-
-(comment
-  (def assets
-    (u/with-fresh-temp-ids
-      (-> []
-          (into (map make-test-asset)
-                ["asset1.txt" "asset2.txt"])
-          (conj (assets/asset-dir example-dir target-example))
-          (conj (assets/prose-document (fs/path test-resources "prose" "includes" "main.prose")
-                                       (fs/path target "document" "includes.html")
-                                       (comp compiler/compile! evaluator)))))))
-
 

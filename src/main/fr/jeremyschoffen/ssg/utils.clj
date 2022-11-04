@@ -1,13 +1,8 @@
 (ns fr.jeremyschoffen.ssg.utils
   (:require
-    [asami.core :as db]
     [hyperfiddle.rcf :refer [tests]]))
 
-(defn entity
-  ([db id]
-   (assoc (db/entity db id) :db/id id))
-  ([db id nested?]
-   (assoc (db/entity db id nested?) :db/id id)))
+
 
 (defn fresh-temp-id [] (atom 0))
 

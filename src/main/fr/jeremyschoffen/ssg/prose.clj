@@ -9,8 +9,7 @@
     [fr.jeremyschoffen.ssg.prose.utils :as u]
     [medley.core :as medley]
 
-    fr.jeremyschoffen.ssg.prose.lib
-    fr.jeremyschoffen.ssg.prose.utils))
+    fr.jeremyschoffen.ssg.prose.lib))
 
 
 (defn slurp-doc [path]
@@ -31,14 +30,15 @@
 ;; -----------------------------------------------------------------------------
 
 (defn make-evaluator [& {:as env}]
-  (fn eval-doc
-    ([path]
-     (eval-doc path {}))
-    ([path opts]
-     (-> default-env
-         (assoc :prose.alpha.document/path path)
-         (merge  opts)
-         e/eval-doc))))
+  (let [env (merge default-env env)]
+    (fn eval-doc
+      ([path]
+       (eval-doc path {}))
+      ([path opts]
+       (-> env
+           (assoc :prose.alpha.document/path path)
+           (merge  opts)
+           e/eval-doc)))))
 
 
 (defn eval&record-deps [{:keys [eval root path]}]
