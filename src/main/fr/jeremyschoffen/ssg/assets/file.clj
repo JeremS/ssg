@@ -15,8 +15,6 @@
   spec)
 
 
-
-
 (defmethod build/build! ::asset-file [_ spec]
   (tb/copy-file spec))
 
