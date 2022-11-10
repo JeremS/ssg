@@ -2,8 +2,11 @@
   (:require
     [clojure.test :as t :refer [deftest is testing use-fixtures]]
     [clojure.tools.build.api :as tb]
+    [fr.jeremyschoffen.java.nio.alpha.file :as fs]
+    [fr.jeremyschoffen.ssg.assets.prose-doc :as-alias pdoc]
     [fr.jeremyschoffen.ssg.build :as build]
     [fr.jeremyschoffen.ssg.db :as db]
+    [fr.jeremyschoffen.ssg.prose-test :as pt]
     [fr.jeremyschoffen.ssg.test-common :as common]))
 
 
@@ -18,61 +21,60 @@
 (use-fixtures :each common/database-fixture test-target-fixture)
 
 
+(comment
+  (defn get-prose-docs []
+    (let [db (db/db (common/conn))
+          docs-ids (db/q '[:find [?id ...]
+                           :where
+                           [?id :type ::pdoc/prose-doc]]
+                         db)]
+      (map (partial db/entity db) docs-ids))))
+
+(defn get-current-prose-test-doc-deps []
+  (let [db (db/db (common/conn))
+        id (db/q
+             '[:find ?id .
+               :in $ ?path
+               :where
+               [?id :src ?path]]
+             db
+             (str (pt/add-root "main.prose")))]
+    (-> (db/entity db id true)
+        :depends-on
+        (->> (into #{} (map (comp str :path)))))))
+
+
+(def expected-deps
+  (-> pt/expected-deps
+      (disj (pt/add-root "main.prose"))
+      (->> (into #{} (map str)))))
+
+
+(deftest example-build
+  (deref (db/transact (common/conn) {:tx-data common/assets}))
+  (build/build-all! (common/conn))
+
+  (is
+    (->> (common/conn)
+         db/get-all-productions-ids
+         (map (partial db/entity (common/conn)))
+         (map :target)
+         (every? fs/exists?)))
+
+  (is (= expected-deps
+         (get-current-prose-test-doc-deps))))
 
 
 (comment
-  (deftest example-build
-    (deref (db/transact (common/conn) {:tx-data common/assets}))))
-
-
-(comment
-  (require '[portal.api :as portal])
-  (portal/open)
-  (portal/clear)
-  (add-tap #'portal/submit)
   (t/run-tests)
 
   (clean-test-target!)
   (common/setup-db)
   (common/tear-down-db)
-  (deref (db/transact (common/conn) {:tx-data [common/test-prose-file]}))
-
-
-  (-> (common/conn)
-      (db/get-all-productions-ids)
-      first
-      (as-> id (db/entity (common/conn) id))
-      (-> :depends-on
-          (->> (map :db/ident))))
-          ;     (map (partial db/entity (common/conn))))))
-
-  (db/entity (common/conn)
-             (first
-               (db/get-all-productions-ids (common/conn))))
+  (deref (db/transact (common/conn) {:tx-data common/assets}))
 
 
 
-  (build/generate-build-plan (common/conn))
-  (tap> ::hello)
-  (build/build-all! (common/conn))
+  (build/build-all! (common/conn)))
 
-  *e
-
-
-  (let [conn (common/conn)
-        db (db/db conn)]
-    (map
-      #(db/entity db %)
-      (db/q '[:find [?id ...]
-              :where
-              [?id :depends-on _]]
-            db)))
-
-  (->> (db/q '[:find [?id ...]
-                   :where
-                   [?id :type :prose-dependency]]
-              (db/db (common/conn)))
-       (map (partial db/entity (common/conn)))
-       (map :path)
-       sort))
-
+ 

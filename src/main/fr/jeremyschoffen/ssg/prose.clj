@@ -7,15 +7,14 @@
     [fr.jeremyschoffen.prose.alpha.eval.sci :as eval-sci]
     [fr.jeremyschoffen.prose.alpha.reader.core :as reader]
     [fr.jeremyschoffen.ssg.prose.utils :as u]
-    [medley.core :as medley]
-
-    fr.jeremyschoffen.ssg.prose.lib))
+    [medley.core :as medley]))
 
 
 (defn slurp-doc [path]
   (let [root (-> (eval-common/get-env) ::root-dir)
         path' (cond->> path
                 root (u/normalize-path root))]
+    (u/record path')
     (slurp path')))
 
 
@@ -47,12 +46,7 @@
                            (eval path {::root-dir root}))
         recording @recording*]
     {:res res
-     :deps (-> recording
-              (->> (u/recording->graph path))
-              (u/normalize-recording root))
-     :classification (-> recording
-                         u/classify-deps
-                         (u/normalize-classification root))}))
+     :deps recording}))
 
 
 ;; -----------------------------------------------------------------------------
@@ -60,11 +54,8 @@
 ;; -----------------------------------------------------------------------------
 (dolly/def-clone doc-sci/make-ns-bindings)
 
+(dolly/def-clone default-sci-nss doc-sci/sci-opt-doc-ns)
 
-(def default-sci-nss
-  (medley/deep-merge doc-sci/sci-opt-doc-ns
-                      {:namespaces (make-ns-bindings fr.jeremyschoffen.ssg.prose.lib
-                                                     fr.jeremyschoffen.ssg.prose.utils)}))
 
 (defn init-sci-ctxt [opts]
   (let [opts (medley/deep-merge default-sci-nss opts)]
@@ -80,6 +71,4 @@
         (dissoc :sci-opts)
         (assoc :prose.alpha.document/eval-forms eval-forms)
         make-evaluator)))
-
-
 

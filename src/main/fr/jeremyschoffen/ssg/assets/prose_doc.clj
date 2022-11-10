@@ -1,13 +1,11 @@
 (ns fr.jeremyschoffen.ssg.assets.prose-doc
   (:require
-    [meander.epsilon :as m]
+    [clojure.data :as data]
     [clojure.tools.build.api :as tb]
     [fr.jeremyschoffen.ssg.db :as db]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
     [fr.jeremyschoffen.ssg.build :as build]
-    [fr.jeremyschoffen.ssg.prose :as p]
-    [fr.jeremyschoffen.ssg.utils :as u]))
-
+    [fr.jeremyschoffen.ssg.prose :as p]))
 
 
 (defn make [src-path dest-path eval-fn & _]
@@ -19,63 +17,55 @@
      :eval-fn eval-fn}))
 
 
-(defn make-tx-ids [main-doc-path main-doc-id classification]
-  (-> classification
-      (->> (reduce-kv
-             (fn [acc k _]
-               (assoc acc k (u/next-id)))
-             {}))
-      (assoc main-doc-path main-doc-id)))
+(defn make-new-dep-tx-data [main-doc-id dep]
+  [{:db/ident dep
+    :type ::prose-dependency
+    :path dep}
+   [:db/add main-doc-id :depends-on dep]])
 
 
-(defn recording->deps-entities-tx [classification path->id]
-  (into []
-        (map (fn [[path t]]
-               {:db/id (path->id path)
-                :db/ident path
-                :type :prose-dependency
-                :prose-dependency-type t
-                :path path}))
-        classification))
+(defn make-remove-dep-tx-data [main-doc-id dep]
+  [:db/retract main-doc-id :depends-on dep])
 
 
-(defn recording->deps-tx [path->deps-map path->id]
-  (let [res (m/rewrites path->deps-map
-              {?path (m/seqable !dep ...)}
-              [[:db/add (m/app path->id ?path)
-                :depends-on (m/app path->id !dep)] ...])]
-    (apply concat res)))
+(defn make-data-tx [main-doc-id previous-deps deps]
+  (let [[removed-deps new-deps] (data/diff previous-deps deps)
+        additions (mapcat (partial make-new-dep-tx-data main-doc-id) new-deps)
+        retractions (map (partial make-remove-dep-tx-data main-doc-id) removed-deps)]
+    (concat additions retractions)))
 
 
-(defn recording->tx [main-doc-path main-doc-id {:keys [deps classification]}]
-  (let [path->id (make-tx-ids main-doc-path main-doc-id classification)]
-    (into (recording->deps-entities-tx classification path->id)
-          (recording->deps-tx deps  path->id))))
-
-
-(defn build [{:keys [src target eval-fn]
-              :db/keys [id]}]
-  (let [{:keys [res] :as res+rec} (p/eval&record-deps {:eval eval-fn
-                                                       :root (fs/parent src)
-                                                       :path (fs/file-name src)})
-        tx (recording->tx src id res+rec)]
-    {:type ::prose-doc
-     :content res
-     :target target
-     :tx tx}))
+(defn recording->tx [{src :src
+                      previous-deps :depends-on
+                      id :db/id} deps]
+  (let [deps (-> deps
+                 (->> (into #{} (map str)))
+                 (disj src))
+        previous-deps (into #{}
+                            (comp
+                              (filter #(= ::prose-dependency (:type %)))
+                              (map :path))
+                            previous-deps)]
+    (make-data-tx id previous-deps deps)))
 
 
 (defmethod build/entity->build-plan ::prose-doc [spec]
-  (build spec))
+  spec)
 
 
-(defmethod build/build! ::prose-doc [conn {:keys [content target  tx]}]
-  (tb/write-file {:path target :string content})
-  (deref (db/transact conn {:tx-data tx})))
+(defn build [spec]
+  (let [{:keys [src target eval-fn]} spec
+        {:keys [res deps]} (p/eval&record-deps {:eval eval-fn
+                                                :root (fs/parent src)
+                                                :path (fs/file-name src)})]
+    {:document res
+     :tx (recording->tx spec deps)}))
 
 
+(defmethod build/build! ::prose-doc [conn spec]
+  (let [{:keys [target]} spec
+        {:keys [document tx]} (build spec)]
+    (tb/write-file {:path target :string document})
+    (deref (db/transact conn {:tx-data tx}))))
 
-(comment
-  (u/with-fresh-temp-ids
-    (build {:src "test-resources/prose/includes/main.prose"
-            :eval-fn (p/make-evaluator)})))
+

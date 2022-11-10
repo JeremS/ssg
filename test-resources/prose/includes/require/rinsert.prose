@@ -1,5 +1,5 @@
 ◊(require
-   '[fr.jeremyschoffen.ssg.prose.lib :as lib])
+   '[fr.jeremyschoffen.prose.alpha.document.lib :as lib])
 
 
 Text to rinsert.
