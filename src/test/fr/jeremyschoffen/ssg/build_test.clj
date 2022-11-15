@@ -3,7 +3,6 @@
     [clojure.test :as t :refer [deftest is testing use-fixtures]]
     [clojure.tools.build.api :as tb]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
-    [fr.jeremyschoffen.ssg.assets.prose-doc :as-alias pdoc]
     [fr.jeremyschoffen.ssg.build :as build]
     [fr.jeremyschoffen.ssg.db :as db]
     [fr.jeremyschoffen.ssg.prose-test :as pt]
@@ -21,15 +20,6 @@
 (use-fixtures :each common/database-fixture test-target-fixture)
 
 
-(comment
-  (defn get-prose-docs []
-    (let [db (db/db (common/conn))
-          docs-ids (db/q '[:find [?id ...]
-                           :where
-                           [?id :type ::pdoc/prose-doc]]
-                         db)]
-      (map (partial db/entity db) docs-ids))))
-
 (defn get-current-prose-test-doc-deps []
   (let [db (db/db (common/conn))
         id (db/q
@@ -44,6 +34,14 @@
         (->> (into #{} (map (comp str :path)))))))
 
 
+(defn get-expected-paths-for-generated-files []
+  (let [db (db/db (common/conn))]
+    (->> db
+         db/get-all-productions-ids
+         (map (partial db/entity db))
+         (map :target))))
+
+
 (def expected-deps
   (-> pt/expected-deps
       (disj (pt/add-root "main.prose"))
@@ -54,15 +52,12 @@
   (deref (db/transact (common/conn) {:tx-data common/assets}))
   (build/build-all! (common/conn))
 
-  (is
-    (->> (common/conn)
-         db/get-all-productions-ids
-         (map (partial db/entity (common/conn)))
-         (map :target)
-         (every? fs/exists?)))
+  (testing "Every file is created"
+    (is (every? fs/exists? (get-expected-paths-for-generated-files))))
 
-  (is (= expected-deps
-         (get-current-prose-test-doc-deps))))
+  (testing "Deps for the prose document are correctly inserted in the db."
+    (is (= expected-deps
+           (get-current-prose-test-doc-deps)))))
 
 
 (comment
