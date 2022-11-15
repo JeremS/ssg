@@ -11,10 +11,10 @@
    :opts opts})
 
 
-(defmethod build/entity->build-plan ::asset-dir [{:keys [src target opts]}]
+(defmethod build/entity->build-plan ::asset-dir [{:keys [src target opts] :as spec}]
   (merge
-    {:type ::asset-dir
-     :src-dirs [src]
+    spec
+    {:src-dirs [src]
      :target-dir target}
     opts))
 

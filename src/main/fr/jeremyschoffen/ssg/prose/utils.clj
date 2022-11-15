@@ -1,9 +1,7 @@
 (ns fr.jeremyschoffen.ssg.prose.utils
   (:require
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
-    [hyperfiddle.rcf :refer [tests]]
-    [meander.epsilon :as m]
-    [medley.core :as med]))
+    [hyperfiddle.rcf :refer [tests]]))
 
 
 ;;-----------------------------------------------------------------------------

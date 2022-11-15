@@ -54,7 +54,7 @@
 
 
 (defn build [spec]
-  (let [{:keys [src target eval-fn]} spec
+  (let [{:keys [src eval-fn]} spec
         {:keys [res deps]} (p/eval&record-deps {:eval eval-fn
                                                 :root (fs/parent src)
                                                 :path (fs/file-name src)})]

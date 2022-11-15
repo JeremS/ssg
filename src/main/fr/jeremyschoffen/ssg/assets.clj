@@ -1,6 +1,5 @@
 (ns fr.jeremyschoffen.ssg.assets
   (:require
-    [asami.core :as db]
     [fr.jeremyschoffen.dolly.core :as dolly]
     [fr.jeremyschoffen.ssg.assets.file :as af]
     [fr.jeremyschoffen.ssg.assets.dir :as ad]

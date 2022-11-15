@@ -1,8 +1,7 @@
 (ns fr.jeremyschoffen.ssg.db
   (:require
     [asami.core :as db]
-    [fr.jeremyschoffen.dolly.core :as dolly]
-    [hyperfiddle.rcf :refer [tests]]))
+    [fr.jeremyschoffen.dolly.core :as dolly]))
 
 
 (defn fresh-temp-id [] (atom 0))
@@ -18,21 +17,6 @@
 (defmacro with-fresh-temp-ids [& body]
   `(binding [*next-id* (fresh-temp-id)]
      ~@body))
-
-
-(defn temp-id-maker []
-  (let [current (atom 0)]
-    (fn next-temp-id []
-      (swap! current dec))))
-
-
-(tests
-  (def temp-id (temp-id-maker))
-  (temp-id) := -1
-  (temp-id) := -2
-  (temp-id) := -3)
-
-
 
 
 (dolly/add-keys-to-quote! :raw-arglist :raw-arglists)
