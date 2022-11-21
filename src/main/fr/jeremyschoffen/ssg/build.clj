@@ -7,22 +7,26 @@
 (defmulti build! (fn [conn spec] (:type spec)))
 
 
-(defn generate-build-plan [conn]
-  (let [db (db/db conn)]
-    (sequence
-      (comp
-        (map #(db/entity db % true))
-        (map entity->build-plan))
-      (db/get-all-productions-ids db))))
+(defn generate-build-plan
+ ([db]
+  (generate-build-plan db (db/get-all-productions-ids db)))
+ ([db ids]
+  (sequence
+    (comp
+      (map #(db/entity db % true))
+      (map entity->build-plan))
+    ids)))
 
 
 (defn execute-build! [conn build-plan]
   (mapv (partial build! conn) build-plan))
 
 
-(defn build-all! [conn]
-  (let [build-plan (generate-build-plan conn)]
-    (execute-build! conn build-plan)))
+(defn build-all!
+  ([conn]
+   (build-all! conn (generate-build-plan (db/db conn))))
+  ([conn build-plan]
+   (execute-build! conn build-plan)))
 
 
 

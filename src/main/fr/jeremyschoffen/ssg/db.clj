@@ -57,3 +57,13 @@
         db production-id))
 
 
+(defn get-outdated-productions [db changed-files]
+  (db/q '[:find [?id ...]
+          :in $ ?changed-files
+          :where
+          [?id :depends-on ?dep]
+          [?dep :path ?path]
+          [(contains? ?changed-files ?path)]]
+        db
+        (set changed-files)))
+

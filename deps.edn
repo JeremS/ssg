@@ -5,7 +5,9 @@
         io.github.jerems/dolly {:git/tag "v29", :git/sha "cfefa49133"}
         org.clojars.quoll/asami  {:mvn/version "2.3.2"}
         io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}
-        com.hyperfiddle/rcf {:mvn/version "20220902-130636"}}
+        com.hyperfiddle/rcf {:mvn/version "20220902-130636"}
+        com.nextjournal/beholder {:mvn/version "1.0.0"}
+        missionary/missionary {:mvn/version "b.26"}}
 
  :aliases
  {:clj {:extra-deps {org.clojure/clojure {:mvn/version "1.11.1"}}}
