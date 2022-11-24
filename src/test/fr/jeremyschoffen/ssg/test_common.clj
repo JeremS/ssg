@@ -1,5 +1,6 @@
 (ns fr.jeremyschoffen.ssg.test-common
   (:require
+    [datascript.core :as d]
     [fr.jeremyschoffen.ssg.db :as db]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
     [fr.jeremyschoffen.prose.alpha.out.html.compiler :as compiler]
@@ -10,25 +11,15 @@
 ;; -----------------------------------------------------------------------------
 ;; Database setup
 ;; -----------------------------------------------------------------------------
-(def db-uri"asami:mem://asset-test-db")
+(def ^:dynamic *test-db* nil)
 
-
-(defn conn []
-  (db/connect db-uri))
-
-
-(defn setup-db []
-  (db/create-database db-uri))
-
-
-(defn tear-down-db []
-  (db/delete-database db-uri))
+(defn make-db []
+  (d/create-conn db/schema))
 
 
 (defn database-fixture [f]
-  (setup-db)
-  (f)
-  (tear-down-db))
+  (binding [*test-db* (make-db)]
+    (f)))
 
 
 ;; -----------------------------------------------------------------------------

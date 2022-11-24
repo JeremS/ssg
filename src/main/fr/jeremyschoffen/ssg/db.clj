@@ -1,7 +1,6 @@
 (ns fr.jeremyschoffen.ssg.db
   (:require
-    [asami.core :as db]
-    [fr.jeremyschoffen.dolly.core :as dolly]))
+    [datascript.core :as db]))
 
 
 (defn fresh-temp-id [] (atom 0))
@@ -19,26 +18,17 @@
      ~@body))
 
 
-(dolly/add-keys-to-quote! :raw-arglist :raw-arglists)
-
-(dolly/def-clone db/connect)
-
-(dolly/def-clone db/db)
-
-(dolly/def-clone db/q)
-
-(dolly/def-clone db/create-database)
-
-(dolly/def-clone db/delete-database)
-
-(dolly/def-clone db/transact)
+(def schema {:src {:db/unique :db.unique/identity}
+             :target {:db/unique :db.unique/identity}
+             :depends-on {:db/valueType :db.type/ref
+                          :db/cardinality :db.cardinality/many}})
 
 
-(defn entity
-  ([db id]
-   (assoc (db/entity db id) :db/id id))
-  ([db id nested?]
-   (assoc (db/entity db id nested?) :db/id id)))
+(defn get-all-productions [db]
+  (db/q '[:find [(pull ?id [:*]) ...]
+          :where
+          [?id :target _]]
+         db))
 
 
 
@@ -66,4 +56,7 @@
           [(contains? ?changed-files ?path)]]
         db
         (set changed-files)))
+
+
+
 

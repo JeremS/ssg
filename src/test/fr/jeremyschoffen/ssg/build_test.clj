@@ -2,6 +2,7 @@
   (:require
     [clojure.test :as t :refer [deftest is testing use-fixtures]]
     [clojure.tools.build.api :as tb]
+    [datascript.core :as d]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
     [fr.jeremyschoffen.ssg.build :as build]
     [fr.jeremyschoffen.ssg.db :as db]
@@ -21,24 +22,23 @@
 
 
 (defn get-current-prose-test-doc-deps []
-  (let [db (db/db (common/conn))
-        id (db/q
-             '[:find ?id .
-               :in $ ?path
-               :where
-               [?id :src ?path]]
-             db
-             (str (pt/add-root "main.prose")))]
-    (-> (db/entity db id true)
+  (let [db (d/db common/*test-db*)
+        deps (d/q
+               '[:find (pull ?id [{:depends-on [:path]}]).
+                 :in $ ?path
+                 :where
+                 [?id :src ?path]]
+               db
+               (str (pt/add-root "main.prose")))]
+    (-> deps
         :depends-on
         (->> (into #{} (map (comp str :path)))))))
 
 
 (defn get-expected-paths-for-generated-files []
-  (let [db (db/db (common/conn))]
+  (let [db (d/db common/*test-db*)]
     (->> db
-         db/get-all-productions-ids
-         (map (partial db/entity db))
+         db/get-all-productions
          (map :target))))
 
 
@@ -49,8 +49,8 @@
 
 
 (deftest example-build
-  (deref (db/transact (common/conn) {:tx-data common/assets}))
-  (build/build-all! (common/conn))
+  (d/transact! common/*test-db* common/assets)
+  (build/build-all! common/*test-db*)
 
   (testing "Every file is created"
     (is (every? fs/exists? (get-expected-paths-for-generated-files))))
@@ -64,11 +64,12 @@
   (t/run-tests)
 
   (clean-test-target!)
-  (common/setup-db)
-  (common/tear-down-db)
-  (deref (db/transact (common/conn) {:tx-data common/assets}))
+
+  (def conn (common/make-db))
+
+  (d/transact! conn  common/assets)
 
 
 
-  (build/build-all! (common/conn)))
+  (build/build-all! conn))
 

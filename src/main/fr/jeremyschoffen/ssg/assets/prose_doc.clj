@@ -2,6 +2,7 @@
   (:require
     [clojure.data :as data]
     [clojure.tools.build.api :as tb]
+    [datascript.core :as d]
     [fr.jeremyschoffen.ssg.db :as db]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
     [fr.jeremyschoffen.ssg.build :as build]
@@ -11,17 +12,17 @@
 (defn make [src-path dest-path eval-fn & _]
   (let [s-src (str src-path)]
     {:type ::prose-doc
-     :db/ident s-src
      :src s-src
      :target (str dest-path)
      :eval-fn eval-fn}))
 
 
 (defn make-new-dep-tx-data [main-doc-id dep]
-  [{:db/ident dep
-    :type ::prose-dependency
-    :path dep}
-   [:db/add main-doc-id :depends-on dep]])
+  (let [id (db/next-id)]
+    [{:db/id id
+      :type ::prose-dependency
+      :path dep}
+     [:db/add main-doc-id :depends-on id]]))
 
 
 (defn make-remove-dep-tx-data [main-doc-id dep]
@@ -66,6 +67,6 @@
   (let [{:keys [target]} spec
         {:keys [document tx]} (build spec)]
     (tb/write-file {:path target :string document})
-    (deref (db/transact conn {:tx-data tx}))))
+    (d/transact! conn tx)))
 
 

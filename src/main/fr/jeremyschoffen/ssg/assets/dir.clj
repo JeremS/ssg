@@ -8,7 +8,7 @@
   {:type ::asset-dir
    :src (str src-path)
    :target (str dest-path)
-   :opts opts})
+   :opts (or opts {})})
 
 
 (defmethod build/entity->build-plan ::asset-dir [{:keys [src target opts] :as spec}]

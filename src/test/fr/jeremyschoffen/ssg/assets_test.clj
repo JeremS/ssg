@@ -1,6 +1,6 @@
 (ns fr.jeremyschoffen.ssg.assets-test
   (:require
-    [asami.core :as db]
+    [datascript.core :as db]
     [clojure.test :as t :refer [deftest is use-fixtures]]
     [fr.jeremyschoffen.ssg.db :as req]
     [fr.jeremyschoffen.ssg.test-common :as common]))
@@ -14,14 +14,14 @@
 
 
 (defn get-productions []
-  (let [db (db/db (common/conn))]
-    (->> db
-         req/get-all-productions-ids
-         (into #{} (map (partial db/entity db))))))
+  (->> common/*test-db*
+       db/db
+       req/get-all-productions
+       (into #{} (map #(dissoc % :db/id)))))
 
 
 (deftest example-assets
-  (deref (db/transact (common/conn) {:tx-data common/assets}))
+  (db/transact! common/*test-db* common/assets)
   (is (= (get-productions) (get-assets))))
 
 
