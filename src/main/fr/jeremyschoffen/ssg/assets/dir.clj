@@ -4,7 +4,7 @@
     [fr.jeremyschoffen.ssg.build :as build]))
 
 
-(defn make [src-path dest-path & opts]
+(defn make [src-path dest-path & {:as opts}]
   {:type ::asset-dir
    :src (str src-path)
    :target (str dest-path)

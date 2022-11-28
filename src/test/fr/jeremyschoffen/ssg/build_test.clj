@@ -45,7 +45,10 @@
   (build/build-all! common/*test-db*)
 
   (testing "Every file is created"
-    (is (every? fs/exists? (get-expected-paths-for-generated-files))))
+    (is (every? fs/exists? common/expected-productions)))
+
+  (testing ".inv file is excluded from example2"
+    (is (not (fs/exists? common/excluded-file))))
 
   (testing "Deps for the prose document are correctly inserted in the db."
     (is (= expected-deps
@@ -55,13 +58,14 @@
 (comment
   (t/run-tests)
 
-  (clean-test-target!)
+  (common/clean-test-target!)
 
   (def conn (common/make-db))
-
   (d/transact! conn  common/assets)
+  (build/build-all! conn)
+  (build/generate-build-plan (db/get-all-productions (d/db conn)))
+  *e
 
-
-
-  (build/build-all! conn))
+  (binding [common/*test-db* conn]
+    (get-expected-paths-for-generated-files)))
 
