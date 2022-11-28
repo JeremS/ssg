@@ -1,25 +1,12 @@
 (ns fr.jeremyschoffen.ssg.test-common
   (:require
+    [clojure.tools.build.api :as tb]
     [datascript.core :as d]
     [fr.jeremyschoffen.ssg.db :as db]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
     [fr.jeremyschoffen.prose.alpha.out.html.compiler :as compiler]
     [fr.jeremyschoffen.ssg.assets :as assets]
     [fr.jeremyschoffen.ssg.prose :as prose]))
-
-
-;; -----------------------------------------------------------------------------
-;; Database setup
-;; -----------------------------------------------------------------------------
-(def ^:dynamic *test-db* nil)
-
-(defn make-db []
-  (d/create-conn db/schema))
-
-
-(defn database-fixture [f]
-  (binding [*test-db* (make-db)]
-    (f)))
 
 
 ;; -----------------------------------------------------------------------------
@@ -49,12 +36,45 @@
 (def test-asset-file1 (make-test-asset "asset1.txt"))
 (def test-asset-file2 (make-test-asset "asset2.txt"))
 (def test-asset-dir (assets/asset-dir example-dir target-example))
+
+
+(def prose-document-path (fs/path test-resources "prose" "includes" "main.prose"))
+(def prose-document-target (fs/path target "document" "includes.html"))
+
 (def test-prose-file (assets/prose-document
-                       (fs/path test-resources "prose" "includes" "main.prose")
-                       (fs/path target "document" "includes.html")
+                       prose-document-path
+                       prose-document-target
                        (comp compiler/compile! evaluator)))
 
 
 (def assets
   [test-asset-file1 test-asset-file2 test-asset-dir test-prose-file])
+
+
+
+;; -----------------------------------------------------------------------------
+;; Database setup
+;; -----------------------------------------------------------------------------
+(def ^:dynamic *test-db* nil)
+
+(defn make-db []
+  (d/create-conn db/schema))
+
+
+(defn database-fixture [f]
+  (binding [*test-db* (make-db)]
+    (f)))
+
+
+;; -----------------------------------------------------------------------------
+;; Cleaning test builds
+;; -----------------------------------------------------------------------------
+(defn clean-test-target! []
+  (tb/delete {:path (str target)}))
+
+
+(defn test-target-fixture [f]
+  (f)
+  (clean-test-target!))
+
 

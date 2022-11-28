@@ -70,3 +70,24 @@
     (d/transact! conn tx)))
 
 
+(def rules
+    '[[(main-doc-change ?id ?changed-files)
+       [?id :src ?src]
+       [(contains? ?changed-files ?src)]]
+      [(dependency-change ?id ?changed-files)
+       [?id :depends-on ?dep]
+       [?dep :path ?path]
+       [(contains? ?changed-files ?path)]]])
+
+
+(defn get-outdated-docs [db changed-files]
+  (d/q '[:find [(pull ?id [:*]) ...]
+         :in $ % ?changed-files
+         :where
+         [?id :type :fr.jeremyschoffen.ssg.assets.prose-doc/prose-doc]
+         (or
+           (main-doc-change ?id ?changed-files)
+           (dependency-change ?id ?changed-files))]
+       db
+       rules
+       changed-files))

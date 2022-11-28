@@ -10,15 +10,7 @@
     [fr.jeremyschoffen.ssg.test-common :as common]))
 
 
-(defn clean-test-target! []
-  (tb/delete {:path (str common/target)}))
-
-(defn test-target-fixture [f]
-  (f)
-  (clean-test-target!))
-
-
-(use-fixtures :each common/database-fixture test-target-fixture)
+(use-fixtures :each common/database-fixture common/test-target-fixture)
 
 
 (defn get-current-prose-test-doc-deps []

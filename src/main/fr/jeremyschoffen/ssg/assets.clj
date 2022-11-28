@@ -12,3 +12,6 @@
 
 (dolly/def-clone prose-document ap/make)
 
+
+
+(dolly/def-clone get-outdated-prose-docs ap/get-outdated-docs)
