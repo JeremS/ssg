@@ -1,4 +1,4 @@
-{:paths ["src/main"]
+{:paths ["src/main" "resources"]
 
  :deps {io.github.jerems/clj-nio {:git/tag "v72", :git/sha "f8d301953d"}
         io.github.jerems/prose   {:git/tag "v78", :git/sha "6373376862"}

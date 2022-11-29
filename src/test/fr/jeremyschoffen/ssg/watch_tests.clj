@@ -22,6 +22,7 @@
   (build/build-all! common/*test-db*)
   (d/transact! common/*test-db* [{:type :fr.jeremyschoffen.ssg.assets.prose-doc/prose-doc :src dumy-file-name}])
 
+
   (testing "Detects changes in main document."
     (is (= (str common/prose-document-path)
            (-> (assets/get-outdated-prose-docs (d/db common/*test-db*)
@@ -43,12 +44,6 @@
                :src
                str)))))
 
-
-
 (comment
-  (t/run-tests)
-  (common/clean-test-target!)
-  (def conn (common/make-db))
-  (d/transact! conn common/assets)
-  (build/build-all! conn)
-  (assets/get-outdated-prose-docs (d/db conn) dependencies-paths))
+  (t/run-tests))
+

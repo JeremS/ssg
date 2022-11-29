@@ -1,6 +1,5 @@
 (ns fr.jeremyschoffen.ssg.assets.file
   (:require
-    [clojure.tools.build.api :as tb]
     [fr.jeremyschoffen.ssg.build :as build]))
 
 
@@ -11,10 +10,7 @@
    :target (str dest-path)})
 
 
-(defmethod build/entity->build-plan ::asset-file [spec]
-  spec)
+(defmethod build/entity->build-commands* ::asset-file [{:keys [src target ] :as spec}]
+  (build/copy-file-cmd spec :src src :target target))
 
-
-(defmethod build/build! ::asset-file [_ spec]
-  (tb/copy-file spec))
 

@@ -1,7 +1,6 @@
 (ns fr.jeremyschoffen.ssg.assets.prose-doc
   (:require
     [clojure.data :as data]
-    [clojure.tools.build.api :as tb]
     [datascript.core :as d]
     [fr.jeremyschoffen.ssg.db :as db]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
@@ -50,10 +49,6 @@
     (make-data-tx id previous-deps deps)))
 
 
-(defmethod build/entity->build-plan ::prose-doc [spec]
-  spec)
-
-
 (defn build [spec]
   (let [{:keys [src eval-fn]} spec
         {:keys [res deps]} (p/eval&record-deps {:eval eval-fn
@@ -63,11 +58,13 @@
      :tx (recording->tx spec deps)}))
 
 
-(defmethod build/build! ::prose-doc [conn spec]
+(defmethod build/entity->build-commands* ::prose-doc [spec]
   (let [{:keys [target]} spec
         {:keys [document tx]} (build spec)]
-    (tb/write-file {:path target :string document})
-    (d/transact! conn tx)))
+    (build/composite-cmd spec
+      (build/write-file-cmd spec :path target :string document)
+      (build/transact-cmd spec :tx-data tx))))
+
 
 
 (def rules

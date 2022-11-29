@@ -1,6 +1,5 @@
 (ns fr.jeremyschoffen.ssg.assets.dir
   (:require
-    [clojure.tools.build.api :as tb]
     [fr.jeremyschoffen.ssg.build :as build]))
 
 
@@ -11,14 +10,9 @@
    :opts (or opts {})})
 
 
-(defmethod build/entity->build-plan ::asset-dir [{:keys [src target opts] :as spec}]
-  (merge
-    spec
-    {:src-dirs [src]
-     :target-dir target}
-    opts))
+(defmethod build/entity->build-commands* ::asset-dir
+  [{:keys [src target opts] :as spec}]
+  (build/copy-dir-cmd spec
+                      (merge {:src-dirs [src] :target-dir target} opts)))
 
-
-(defmethod build/build! ::asset-dir [_ spec]
-  (tb/copy-dir spec))
 

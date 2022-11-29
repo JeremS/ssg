@@ -27,13 +27,6 @@
         (->> (into #{} (map (comp str :path)))))))
 
 
-(defn get-expected-paths-for-generated-files []
-  (let [db (d/db common/*test-db*)]
-    (->> db
-         db/get-all-productions
-         (map :target))))
-
-
 (def expected-deps
   (-> pt/expected-deps
       (disj (pt/add-root "main.prose"))
@@ -62,10 +55,10 @@
 
   (def conn (common/make-db))
   (d/transact! conn  common/assets)
-  (build/build-all! conn)
-  (build/generate-build-plan (db/get-all-productions (d/db conn)))
-  *e
+  (->> (d/db conn)
+       db/get-all-productions
+       build/generate-build-commands
+       (build/execute-build-commands! conn))
+  (build/execute-build-commands! conn (build/generate-build-commands (db/get-all-productions (d/db conn)))))
 
-  (binding [common/*test-db* conn]
-    (get-expected-paths-for-generated-files)))
 

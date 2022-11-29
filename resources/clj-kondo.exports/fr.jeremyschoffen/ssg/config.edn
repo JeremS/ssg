@@ -1,0 +1,2 @@
+{:lint-as
+ {fr.jeremyschoffen.ssg.build/def-command clojure.core/def}}
