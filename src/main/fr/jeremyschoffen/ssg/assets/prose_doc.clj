@@ -81,7 +81,7 @@
   (d/q '[:find [(pull ?id [:*]) ...]
          :in $ % ?changed-files
          :where
-         [?id :type :fr.jeremyschoffen.ssg.assets.prose-doc/prose-doc]
+         [?id :type ::prose-doc]
          (or
            (main-doc-change ?id ?changed-files)
            (dependency-change ?id ?changed-files))]

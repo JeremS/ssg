@@ -1,5 +1,6 @@
 (ns fr.jeremyschoffen.ssg.assets.file
   (:require
+    [datascript.core :as d]
     [fr.jeremyschoffen.ssg.build :as build]))
 
 
@@ -14,3 +15,13 @@
   (build/copy-file-cmd spec :src src :target target))
 
 
+
+(defn get-outdated-files [db changed-files]
+  (d/q '[:find [(pull ?id [:*]) ...]
+         :in $ ?changed-files
+         :where
+         [?id :type ::asset-file]
+         [?id :src ?src]
+         [(contains? ?changed-files ?src)]]
+       db
+       changed-files))

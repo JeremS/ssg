@@ -14,4 +14,5 @@
 
 
 
+(dolly/def-clone get-outdated-asset-files af/get-outdated-files)
 (dolly/def-clone get-outdated-prose-docs ap/get-outdated-docs)

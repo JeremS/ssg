@@ -1,7 +1,6 @@
 (ns fr.jeremyschoffen.ssg.build-test
   (:require
     [clojure.test :as t :refer [deftest is testing use-fixtures]]
-    [clojure.tools.build.api :as tb]
     [datascript.core :as d]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
     [fr.jeremyschoffen.ssg.build :as build]
