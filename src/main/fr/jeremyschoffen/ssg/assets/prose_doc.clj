@@ -66,25 +66,22 @@
       (build/transact-cmd spec :tx-data tx))))
 
 
-
 (def rules
-    '[[(main-doc-change ?id ?changed-files)
-       [?id :src ?src]
-       [(contains? ?changed-files ?src)]]
-      [(dependency-change ?id ?changed-files)
-       [?id :depends-on ?dep]
-       [?dep :path ?path]
-       [(contains? ?changed-files ?path)]]])
+  '[[(main-doc-change ?id ?changed-file)
+     [?id :src ?changed-file]]
+    [(dependency-change ?id ?changed-file)
+     [?id :depends-on ?dep]
+     [?dep :path ?changed-file]]])
 
 
 (defn get-outdated-docs [db changed-files]
   (d/q '[:find [(pull ?id [:*]) ...]
-         :in $ % ?changed-files
+         :in $ % [?changed-file ...]
          :where
          [?id :type ::prose-doc]
          (or
-           (main-doc-change ?id ?changed-files)
-           (dependency-change ?id ?changed-files))]
+           (main-doc-change ?id ?changed-file)
+           (dependency-change ?id ?changed-file))]
        db
        rules
        changed-files))

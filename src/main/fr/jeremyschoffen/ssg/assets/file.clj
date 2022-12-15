@@ -18,10 +18,9 @@
 
 (defn get-outdated-files [db changed-files]
   (d/q '[:find [(pull ?id [:*]) ...]
-         :in $ ?changed-files
+         :in $ [?changed-file ...]
          :where
          [?id :type ::asset-file]
-         [?id :src ?src]
-         [(contains? ?changed-files ?src)]]
+         [?id :src ?changed-file]]
        db
        changed-files))
