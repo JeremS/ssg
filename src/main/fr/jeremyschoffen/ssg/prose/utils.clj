@@ -1,34 +1,4 @@
-(ns fr.jeremyschoffen.ssg.prose.utils
-  (:require
-    [fr.jeremyschoffen.java.nio.alpha.file :as fs]
-    [hyperfiddle.rcf :refer [tests]]))
-
-
-;;-----------------------------------------------------------------------------
-;; Path utilities
-;;-----------------------------------------------------------------------------
-(defn add-root [path root]
-  (fs/path root path))
-
-
-(defn remove-root [path root]
-  (fs/relativize root path))
-
-
-(tests
-  (def r (fs/path "toto" "tata"))
-  (def p (fs/path "titi"))
-  (def p-long (fs/path "toto" "tata""titi"))
-
-
-  (add-root p r) := p-long
-  (remove-root p-long r) := p)
-
-
-(defn normalize-path [root path]
-  (->> path
-       (fs/path root)
-       fs/normalize))
+(ns fr.jeremyschoffen.ssg.prose.utils)
 
 
 ;;-----------------------------------------------------------------------------

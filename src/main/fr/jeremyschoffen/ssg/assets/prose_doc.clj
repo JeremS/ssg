@@ -3,17 +3,25 @@
     [clojure.data :as data]
     [datascript.core :as d]
     [fr.jeremyschoffen.ssg.db :as db]
-    [fr.jeremyschoffen.java.nio.alpha.file :as fs]
     [fr.jeremyschoffen.ssg.build :as build]
     [fr.jeremyschoffen.ssg.prose :as p]))
 
 
-(defn make [src-path dest-path eval-fn & _]
+(defn make
+  "Make the specification for a prose document.
+
+  Args:
+  - `src-path`: path to the prose document source.
+  - `dest-path`: path to file generated from the prose document.
+  - `eval-fn`: function used to generate the document.
+  - `eval-env`: data merged in the environment of the prose evaluation."
+  [src-path dest-path eval-fn & {:keys [eval-env]}]
   (let [s-src (str src-path)]
     {:type ::prose-doc
      :src s-src
      :target (str dest-path)
-     :eval-fn eval-fn}))
+     :eval-fn eval-fn
+     :eval-env eval-env}))
 
 
 (defn make-new-dep-tx-data [main-doc-id dep]
@@ -35,10 +43,11 @@
     (concat additions retractions)))
 
 
-(defn recording->tx [{src :src
-                      previous-deps :depends-on
-                      id :db/id} deps]
-  (let [deps (-> deps
+(defn recording->tx [spec deps]
+  (let [{src :src
+         previous-deps :depends-on
+         id :db/id} spec
+        deps (-> deps
                  (->> (into #{} (map str)))
                  (disj src))
         previous-deps (into #{}
@@ -50,10 +59,10 @@
 
 
 (defn build [spec]
-  (let [{:keys [src eval-fn]} spec
+  (let [{:keys [src eval-fn eval-env]} spec
         {:keys [res deps]} (p/eval&record-deps {:eval eval-fn
-                                                :root (fs/parent src)
-                                                :path (fs/file-name src)})]
+                                                :eval-env eval-env
+                                                :path src})]
     {:document res
      :tx (recording->tx spec deps)}))
 

@@ -2,15 +2,16 @@
   (:require
     [clojure.test :as t :refer [deftest testing is]]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
-    [fr.jeremyschoffen.ssg.prose :as p]))
+    [fr.jeremyschoffen.ssg.prose :as p]
+    [fr.jeremyschoffen.ssg.test-common :as common]))
 
 ;; Testing the recuperation of deps when evaluating a prose document.
 
 (def root (fs/path "test-resources/prose/includes"))
 
-(def clojure-eval (p/make-evaluator))
+(def clojure-eval (common/make-clojure-evaluator))
 
-(def sci-eval (p/make-sci-evaluator))
+(def sci-eval (common/make-sci-evaluator))
 
 (def add-root (partial fs/path root))
 (def normalize-path add-root)
@@ -27,20 +28,22 @@
 (deftest tracking-deps
   (testing "In clojure env"
     (let [res (p/eval&record-deps {:eval clojure-eval
-                                   :root root
+                                   :eval-env {::common/root-dir root}
                                    :path "main.prose"})]
       (is (=  (-> res :deps set) expected-deps))))
 
   (testing "In sci env"
     (let [res (p/eval&record-deps {:eval sci-eval
-                                   :root root
+                                   :eval-env {::common/root-dir root}
                                    :path "main.prose"})]
       (is (=  (-> res :deps set) expected-deps)))))
 
-
 (comment
-  (clojure-eval "main.prose" {::p/root-dir root})
-  (sci-eval "main.prose" {::p/root-dir root})
+  (clojure-eval "main.prose" {::common/root-dir root})
+  (sci-eval "main.prose" {::common/root-dir root})
+  (p/eval&record-deps {:eval sci-eval
+                       :eval-env {::common/root-dir root}
+                       :path "main.prose"})
   (t/run-tests)
   *e)
 

@@ -58,6 +58,8 @@
        db/get-all-productions
        build/generate-build-commands
        (build/execute-build-commands! conn))
-  (build/execute-build-commands! conn (build/generate-build-commands (db/get-all-productions (d/db conn)))))
+
+  (binding [common/*test-db* conn]
+    (get-current-prose-test-doc-deps)))
 
 

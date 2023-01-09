@@ -5,6 +5,7 @@
     [datascript.core :as d]
     [fr.jeremyschoffen.ssg.db :as db]
     [fr.jeremyschoffen.java.nio.alpha.file :as fs]
+    [fr.jeremyschoffen.prose.alpha.eval.common :as eval-common]
     [fr.jeremyschoffen.prose.alpha.out.html.compiler :as compiler]
     [fr.jeremyschoffen.ssg.assets :as assets]
     [fr.jeremyschoffen.ssg.prose :as prose]))
@@ -34,7 +35,24 @@
     (fs/path target-assets name)))
 
 
-(def evaluator (prose/make-sci-evaluator))
+
+(defn slurp-doc [path]
+  (let [root (-> (eval-common/get-env) ::root-dir)]
+    (-> root
+        (fs/path path)
+        fs/normalize
+        prose/recording-slurp-doc)))
+
+
+(defn make-clojure-evaluator []
+  (prose/make-evaluator {:prose.alpha.document/slurp-doc slurp-doc}))
+
+
+(defn make-sci-evaluator []
+  (prose/make-sci-evaluator {:prose.alpha.document/slurp-doc slurp-doc}))
+
+
+(def evaluator (make-sci-evaluator))
 
 (def test-asset-file1 (make-test-asset "asset1.txt"))
 (def test-asset-file2 (make-test-asset "asset2.txt"))
@@ -46,10 +64,18 @@
 (def prose-document-path (fs/path test-resources "prose" "includes" "main.prose"))
 (def prose-document-target (fs/path target "document" "includes.html"))
 
-(def test-prose-file (assets/prose-document
-                       prose-document-path
-                       prose-document-target
-                       (comp compiler/compile! evaluator)))
+(defn prose-document [src dest eval-fn]
+  (let [[root name] ((juxt fs/parent fs/file-name) src)
+        eval-fn (fn [_ env]
+                  (compiler/compile! (eval-fn name env)))]
+    (assets/prose-document
+      src
+      dest
+      eval-fn
+      :eval-env {::root-dir root})))
+
+
+(def test-prose-file (prose-document prose-document-path prose-document-target evaluator))
 
 
 (def assets

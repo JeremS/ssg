@@ -10,16 +10,14 @@
     [medley.core :as medley]))
 
 
-(defn slurp-doc [path]
-  (let [root (-> (eval-common/get-env) ::root-dir)
-        path' (cond->> path
-                root (u/normalize-path root))]
-    (u/record path')
-    (slurp path')))
+(defn recording-slurp-doc [path]
+  (u/record path)
+  (slurp path))
+
 
 
 (def default-env
-  {:prose.alpha.document/slurp-doc slurp-doc
+  {:prose.alpha.document/slurp-doc recording-slurp-doc
    :prose.alpha.document/read-doc reader/read-from-string
    :prose.alpha.document/eval-forms eval-common/eval-forms-in-temp-ns})
 
@@ -40,10 +38,22 @@
            e/eval-doc)))))
 
 
-(defn eval&record-deps [{:keys [eval root path]}]
+(defn eval&record-deps
+  "Evalutate a prose document and record the dependencies.
+
+  Args:
+  - `eval`: a function that evaluate a prose document.
+  - `eval-env`: The environment for the evaluation.
+  - `path`: path of the document to evaluate.
+
+  Result is a map whose keys are
+  - `res`: the result of the evaluation.
+  - `deps`: paths of the recorded deps.
+  "
+  [{:keys [eval eval-env path]}]
   (let [recording* (u/make-empty-recording)
         res (u/record-in recording*
-                           (eval path {::root-dir root}))
+              (eval path eval-env))
         recording @recording*]
     {:res res
      :deps recording}))
