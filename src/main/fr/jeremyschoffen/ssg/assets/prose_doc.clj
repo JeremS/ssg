@@ -21,7 +21,7 @@
      :src s-src
      :target (str dest-path)
      :eval-fn eval-fn
-     :eval-env eval-env}))
+     :eval-env (assoc eval-env :prose.alpha.document/main-path s-src)}))
 
 
 (defn make-new-dep-tx-data [main-doc-id dep]
